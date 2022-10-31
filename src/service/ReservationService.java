@@ -4,12 +4,13 @@ import model.Customer;
 import model.IRoom;
 import model.Reservation;
 
+import javax.management.openmbean.KeyAlreadyExistsException;
 import java.util.*;
 
 public class ReservationService {
-    private static Map<String, IRoom> mapOfRooms = new HashMap<>();
-    private static Map<String, List<Reservation>> emailToReservation = new HashMap<>();
-    private static Map<String, List<Reservation>> roomNumberToReservation = new HashMap<>();
+    private static final Map<String, IRoom> mapOfRooms = new HashMap<>();
+    private static final Map<String, List<Reservation>> emailToReservation = new HashMap<>();
+    private static final Map<String, List<Reservation>> roomNumberToReservation = new HashMap<>();
     private static ReservationService reservationService = null;
 
     private ReservationService() { }
@@ -23,9 +24,11 @@ public class ReservationService {
     public void addRoom(IRoom room) {
         String roomNumber = room.getRoomNumber();
         if (mapOfRooms.containsKey(roomNumber)) {
-            throw new IllegalArgumentException("Room number " + roomNumber + " already exists, add room failed.");
+            mapOfRooms.replace(roomNumber, room);
+            throw new KeyAlreadyExistsException("Warning: Room number " + roomNumber + "already exists; overwriting record.");
+        } else {
+            mapOfRooms.put(roomNumber, room);
         }
-        mapOfRooms.put(roomNumber, room);
     }
 
     public IRoom getARoom(String roomId) {
@@ -54,7 +57,9 @@ public class ReservationService {
     }
 
     private static boolean roomIsAvailable(IRoom room, Date checkInDate, Date checkOutDate) {
-        List<Reservation> listOfReservations = roomNumberToReservation.get(room.getRoomNumber());
+        String roomNumber = room.getRoomNumber();
+        if (!roomNumberToReservation.containsKey(roomNumber)) { return true; }
+        List<Reservation> listOfReservations = roomNumberToReservation.get(roomNumber);
         for (Reservation reservation : listOfReservations) {
             if (checkInDate.compareTo(reservation.getCheckOutDate()) <= 0) {
                 if (checkOutDate.compareTo(reservation.getCheckInDate()) >= 0) {

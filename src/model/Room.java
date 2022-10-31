@@ -6,8 +6,11 @@ public class Room implements IRoom{
     protected Double roomPrice;
     protected RoomType roomType;
 
-    public Room () {
+    public Room (String roomNumber, Double roomPrice, RoomType roomType) {
         super();
+        this.roomNumber = roomNumber;
+        this.roomPrice = roomPrice;
+        this.roomType = roomType;
     }
 
     @Override

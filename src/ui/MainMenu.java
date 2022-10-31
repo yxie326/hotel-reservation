@@ -3,14 +3,13 @@ package ui;
 import api.HotelResource;
 import model.IRoom;
 import model.Reservation;
-import service.ReservationService;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class MainMenu {
-    private static final Scanner scanner = new Scanner(System.in);
+    static final Scanner scanner = new Scanner(System.in);
 
     private static Date getDate() {
         SimpleDateFormat SDFormat = new SimpleDateFormat("MM/dd/yyyy");
@@ -51,35 +50,40 @@ public class MainMenu {
         return availableRooms;
     }
 
-
     private static void reserveRoom(Map<String, IRoom> mapOfRooms, Date checkIn, Date checkOut) {
         System.out.println("Please enter the room number for reservation:");
-        boolean foundRoom = false;
         do {
             String roomNumber = scanner.nextLine();
             if (mapOfRooms.containsKey(roomNumber)) {
                 String email;
                 IRoom room = mapOfRooms.get(roomNumber);
-                boolean reservedRoom = false;
                 System.out.println("Please enter the email address for reservation");
                 do {
                     email = scanner.nextLine();
                     try {
                         HotelResource.getInstance().bookARoom(email, room, checkIn, checkOut);
-                        reservedRoom = true;
+                        return;
                     } catch (IllegalArgumentException ex) {
                         System.out.println(ex.getLocalizedMessage());
+                        String prompt = "Do you wish to continue making the reservation? (Y/N)";
+                        YNReader.scanner = scanner;
+                        boolean keepBooking = YNReader.ynReader(prompt);
+                        if (keepBooking) {
+                            System.out.println("Please re-enter the room number for reservation:");
+                        } else { return; }
                         System.out.println("Please re-enter the email address for reservation");
                     }
-                } while (!reservedRoom);
-                foundRoom = true;
+                } while (true);
             } else {
                 System.out.println("Sorry, the room " + roomNumber + " is either unavailable or nonexistent.");
-                System.out.println("Do you wish to continue making the reservation? (Y/N)");
-                /* TODO Continue reserving Y/N */
-                System.out.println("Please re-enter the room number for reservation:");
+                String prompt = "Do you wish to continue making the reservation? (Y/N)";
+                YNReader.scanner = scanner;
+                boolean keepBooking = YNReader.ynReader(prompt);
+                if (keepBooking) {
+                    System.out.println("Please re-enter the room number for reservation:");
+                } else { return; }
             }
-        } while (!foundRoom);
+        } while (true);
     }
 
     private static void findAndReserveRoom() {
@@ -143,9 +147,9 @@ public class MainMenu {
             }
         } while (true);
     }
+
     public static void main(String[] args) {
         System.out.println("Welcome to the Hotel Reservation Application.");
-        boolean exitProgram = false;
         do {
             System.out.println("--------------------------------------------------");
             System.out.println("1. Find and reserve a room");
@@ -157,36 +161,23 @@ public class MainMenu {
             System.out.println("Please select a number from the menu option (1-5).");
             String userInput = scanner.nextLine();
             switch (userInput) {
-                case "1": {
-                    findAndReserveRoom();
-                    break;
+                case "1" -> findAndReserveRoom();
+                case "2" -> displayReservation();
+                case "3" -> createAccount();
+                case "4" -> {
+                    AdminMenu.scanner = scanner;
+                    AdminMenu.adminMenu();
                 }
-                case "2": {
-                    displayReservation();
-                    break;
-                }
-                case "3": {
-                    createAccount();
-                    break;
-                }
-                case "4": {
-                    /* TODO */
-                    System.out.println("Admin");
-                    break;
-                }
-                case "5": {
-                    exitProgram = true;
+                case "5" -> {
                     System.out.println("Thank you for using the Hotel Reservation Application.");
                     System.out.println("Have a nice day!");
-                    break;
+                    scanner.close();
+                    return;
                 }
-                default: {
-                    System.out.println("Illegal input; please select a number from the menu option (1-5).");
-                }
+                default -> System.out.println("Illegal input; please select a number from the menu option (1-5).");
             }
             System.out.println("Press ENTER to return to the main menu");
             scanner.nextLine();
-        } while (!exitProgram);
-        scanner.close();
+        } while (true);
     }
 }

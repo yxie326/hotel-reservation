@@ -6,6 +6,7 @@ import model.Reservation;
 import service.CustomerService;
 import service.ReservationService;
 
+import javax.management.openmbean.KeyAlreadyExistsException;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class AdminResource {
                 ReservationService.getInstance().addRoom(room);
                 String roomNumber = room.getRoomNumber();
                 System.out.println("Added room " + roomNumber + " successfully.");
-            } catch (IllegalArgumentException ex) {
+            } catch (KeyAlreadyExistsException ex) {
                 System.out.println(ex.getLocalizedMessage());
             }
         }
